@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Job;
 use App\Models\User;
+use App\Mail\JobPosted;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 
 class JobController extends Controller
 {
@@ -34,12 +36,15 @@ class JobController extends Controller
             'title' => ['required', 'min:3'],
             'salary' => ['required']
         ]);
-        Job::create([
+        $job = Job::create([
             'title' => request('title'),
             'salary' => request('salary'),
-            // This is being hardcoded now, until we do the validation. We can grab the id from that.
             'employer_id' => 1,
         ]);
+
+        Mail::to($job->employer->user)->send(
+            new JobPosted($job)
+        );
         return redirect('/jobs');
     }
     public function edit(Job $job)
